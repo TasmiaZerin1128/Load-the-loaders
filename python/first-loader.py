@@ -3,15 +3,14 @@ from bs4 import BeautifulSoup
 import requests
 import pandas as pd
 import sys
+from modules.utils import curve_file_generator
 
 
-def check_if_data_available_for(start_date: datetime.date, end_date: datetime.date):
-    while start_date <= end_date:
-        if start_date < datetime.date(year=2016, month=1, day=1):
-            raise ValueError(f"{start_date} is prior to the data publish start date of January 1st, 2016.")
-        if start_date > datetime.datetime.now().date() + datetime.timedelta(days=1):
-            raise ValueError(f"{start_date} is in the future. Query date is supported till today's date.")
-        start_date += datetime.timedelta(days=1)
+def check_if_data_available_for(start_date: datetime.date):
+    if start_date < datetime.date(year=2016, month=1, day=1):
+        raise ValueError(f"{start_date} is prior to the data publish start date of January 1st, 2016.")
+    if start_date > datetime.datetime.now().date() + datetime.timedelta(days=1):
+        raise ValueError(f"{start_date} is in the future. Query date is supported till today's date.")
 
 
 def fetch_data(start_date: datetime.date, end_date: datetime.date):
@@ -24,7 +23,7 @@ def fetch_data(start_date: datetime.date, end_date: datetime.date):
     return data.json()
 
 
-def save_data_to_csv(data):
+def save_data(data):
     df = []
     psrTypes = ["Fossil Hard coal", "Fossil Oil", "Hydro Pumped Storage", "Biomass", "Hydro Run-of-river and poundage"]
 
@@ -44,15 +43,15 @@ def save_data_to_csv(data):
     
     df = pd.concat(df)
     
-    csv_file = f'first_loader_{datetime.datetime.now()}.csv'
-    df.to_csv(csv_file, index=False)
+    generator = curve_file_generator.CurveGenerator(df)
+    generator.createCSV('bmrs_report')
 
 
-def get_results(start_date: datetime.date, end_date: datetime.date):
-    check_if_data_available_for(start_date, end_date)
-    print(f'Start time {start_date} and end time {end_date} are valid. Fetching data.')
+def get_results(start_date: datetime.date, end_date: datetime.date) -> None:
+    check_if_data_available_for(start_date)
+    print(f'Start time {start_date} is valid. Fetching data.')
     data = fetch_data(start_date, end_date)
-    save_data_to_csv(data)
+    save_data(data)
 
 
 # Get the data for the last n days
