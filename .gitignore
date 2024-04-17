@@ -27,6 +27,9 @@ comparisons_*.txt
 results_*.txt
 */pytils
 
+#CSV files
+*.csv
+
 # MacOS
 .DS_Store
 
