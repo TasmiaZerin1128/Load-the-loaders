@@ -54,4 +54,6 @@ def get_results(start_date: datetime.date, end_date: datetime.date):
     data = fetch_data(start_date, end_date)
     save_data_to_csv(data)
 
+
+# Get the data for the last n days
 get_results(datetime.datetime.now().date() - datetime.timedelta(days=int(sys.argv[1])), datetime.datetime.now().date())
