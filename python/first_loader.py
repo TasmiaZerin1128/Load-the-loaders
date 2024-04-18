@@ -24,7 +24,7 @@ def fetch_data(start_date: datetime.date, end_date: datetime.date):
 
 
 def save_data(data):
-    df = []
+    data_list = []
     psrTypes = ["Fossil Hard coal", "Fossil Oil", "Hydro Pumped Storage", "Biomass", "Hydro Run-of-river and poundage"]
 
     for each_data_block in data['data']:
@@ -39,11 +39,9 @@ def save_data(data):
             'psrType': 'keys',
         })
         
-        df.append(single_df)
+        data_list.extend(single_df.to_dict('records'))
     
-    df = pd.concat(df)
-    
-    generator = curve_file_generator.CurveGenerator(df)
+    generator = curve_file_generator.CurveGenerator(data_list)
     generator.createCSV('bmrs_report')
 
 

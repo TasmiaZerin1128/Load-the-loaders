@@ -1,12 +1,13 @@
 import datetime
 import os
+import pandas as pd
 
 class CurveGenerator:
 
     data = None
 
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, data: dict):
+        self.data = pd.DataFrame.from_dict(data)
 
     def createCSV(self, folder_name):
         if not os.path.exists(f'curvefiles/{folder_name}'):
