@@ -17,6 +17,11 @@ def fetch_data(auth_token: str):
     return data['renewableGeneration']
 
 def save_data(data_list):
+    data = response.json()
+    print(data['renewableGeneration'])
+    return data
+
+def save_data(data_list: dict):
     generator = curve_file_generator.CurveGenerator(data_list)
     generator.createCSV('terna_renewable_report')
 
@@ -24,6 +29,7 @@ def get_results() -> None:
     url = "https://api.terna.it/transparency/oauth/accessToken"
     auth_token = auth_token_generator.AuthToken(url).create_terna_request()
     result = fetch_data(auth_token)
+    print(auth_token)
     save_data(result)
 
 
