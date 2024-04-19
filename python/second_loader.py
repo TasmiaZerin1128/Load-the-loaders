@@ -1,5 +1,6 @@
 import requests
 import os
+import json
 from modules.utils import auth_token_generator, curve_file_generator
 
 def fetch_data(auth_token: str):
@@ -11,11 +12,11 @@ def fetch_data(auth_token: str):
     }
 
     response = requests.get(data_url, headers=headers)
-    data = response.json()
+    data = json.loads(response.text)
     print(data['renewableGeneration'])
-    return data
+    return data['renewableGeneration']
 
-def save_data(data_list: dict):
+def save_data(data_list):
     generator = curve_file_generator.CurveGenerator(data_list)
     generator.createCSV('terna_renewable_report')
 
@@ -23,7 +24,6 @@ def get_results() -> None:
     url = "https://api.terna.it/transparency/oauth/accessToken"
     auth_token = auth_token_generator.AuthToken(url).create_terna_request()
     result = fetch_data(auth_token)
-    print(auth_token)
     save_data(result)
 
 
