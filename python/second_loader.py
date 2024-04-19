@@ -3,6 +3,7 @@ import os
 import datetime
 import sys
 from modules.utils import auth_token_generator, curve_file_generator
+from modules.utils.retry import retry
 
 
 def check_if_data_available_for(start_date: datetime.date):
@@ -23,11 +24,13 @@ def fetch_data(auth_token: str, start_date: datetime.date, end_date: datetime.da
     }
 
     response = requests.get(data_url, headers=headers)
+    print(response.status_code)
 
-    if 'Developer Inactive' in response.text: return None
-
+    #Only raise error if the request is forbidden
+    if response.status_code == 401 : return None
+    if response.status_code != 200 : raise Exception("Request failed.")
+    
     data = response.json()
-
     
     return data['renewableGeneration']
 
@@ -42,22 +45,25 @@ def save_data(data_list: dict):
     generator = curve_file_generator.CurveGenerator(data_list)
     generator.createCSV('terna_renewable_report')
 
+
+@retry(max_retries=5, wait_time=5)
 def get_results(start_date: datetime.date, end_date: datetime.date) -> None:
     auth_url = "https://api.terna.it/transparency/oauth/accessToken"
     auth_token = auth_token_generator.AuthToken(auth_url).create_terna_request()
     print(auth_token)
     check_if_data_available_for(start_date)
     result = fetch_data(auth_token, start_date, end_date)
-    if(result != None): 
-        save_data(result)
+    if(result == None): 
+        print("Unauthorized access. Please check the credentials.")
     else:
-        print("Authentication failed. Check your auth token.")
+        save_data(result)
 
 
 
 start_from = datetime.timedelta(days=int(sys.argv[1]))
 check_for = datetime.timedelta(days=int(sys.argv[2]) - 1)
 current_time = datetime.datetime.now().date()
+
 
 get_results(current_time - start_from - check_for, current_time - start_from)
 ## give the start date and how many days to get data of as command line arguments
