@@ -4,6 +4,7 @@ from more_itertools import first
 import requests
 from bs4 import BeautifulSoup
 import sys
+from lxml import etree
 from modules.utils import auth_token_generator, curve_file_generator
 
 CZC_Table_Map = [
@@ -37,7 +38,7 @@ def check_if_data_available_for(start_date: datetime.date):
 
 def map_table_data(table: list, Table_Map: list):
     table_data = []
-    for row in table[1:]:
+    for row in table[1:]:  # Skip the first row as it contains the headers
         cols = row.find_all('td')
         cols = [ele.text.strip() for ele in cols]
         row_data = dict(zip(Table_Map, cols))
@@ -60,7 +61,7 @@ def save_data(data: list):
         for key in row:
             new_data = {}
             if key not in ['date', 'hour']:
-                new_data['date'] = f"{row['date']} {row['hour'].zfill(2)}:00"
+                new_data['date'] = datetime.datetime.strptime(row['date'], "%Y-%m-%d") + datetime.timedelta(hours=int(row['hour']))
                 new_data['value'] = row[key]
                 new_data['keys'] = key
                 new_data['name'] = 'ibex_bam_report'
@@ -73,6 +74,7 @@ def fetch_data(given_date: datetime.date):
     print('Fetching data')
     data_url = "https://ibex.bg/markets/dam/cross-zonal-capacities/"
 
+    # Necessary to access the webpage
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
     }
@@ -85,8 +87,9 @@ def fetch_data(given_date: datetime.date):
     req = requests.Session()
     response = req.post(data_url, headers=headers, data=form_data)
     if response.status_code != 200 : raise Exception("Request failed.")
+    req.close()
 
-    soup = BeautifulSoup(response.text, 'html.parser')
+    soup = BeautifulSoup(response.text, 'lxml')
 
     data = []
     #Two hidden tables - czc-table, bgro-czc-table to fetch
