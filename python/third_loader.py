@@ -7,27 +7,27 @@ import sys
 from lxml import etree
 from modules.utils import auth_token_generator, curve_file_generator
 
-CZC_Table_Map = [
-    'date',
-    'hour',
-    'bg,price,euro/mwh',
-    'gr,price,euro/mwh',
-    'bg,gr,atc,euro/mwh',
-    'gr,bg,atc,euro/mwh',
-    'bg,gr,crossborderflow,euro/mwh',
-    'gr,bg,crossborderflow,euro/mwh'
-]
+CZC_Table_Map = {
+    'czc_date':'date',
+    'czc_hour':'hour',
+    'bgprice':'bg,price,euro/mwh',
+    'grprice-11':'gr,price,euro/mwh',
+    'czc_bg_gr':'bg,gr,atc,euro/mwh',
+    'czc_gr_bg':'gr,bg,atc,euro/mwh',
+    'fl_bg_gr':'bg,gr,crossborderflow,euro/mwh',
+    'fl_gr_bg':'gr,bg,crossborderflow,euro/mwh'
+}
 
-BGRO_CZC_Table_Map = [
-    'date',
-    'hour',
-    'bg,price,euro/mwh',
-    'ro,price,euro/mwh',
-    'bg,ro,atc,euro/mwh',
-    'ro,bg,atc,euro/mwh',
-    'bg,ro,crossborderflow,euro/mwh',
-    'ro,bg,crossborderflow,euro/mwh'
-]
+BGRO_CZC_Table_Map = {
+    'czc_date':'date',
+    'czc_hour':'hour',
+    'bgprice':'bg,price,euro/mwh',
+    'roprice':'ro,price,euro/mwh',
+    'czc_bg_ro':'bg,ro,atc,euro/mwh',
+    'czc_ro_bg':'ro,bg,atc,euro/mwh',
+    'fl_bg_ro':'bg,ro,crossborderflow,euro/mwh',
+    'fl_ro_bg':'ro,bg,crossborderflow,euro/mwh'
+}
 
 
 def check_if_data_available_for(start_date: datetime.date):
@@ -38,12 +38,15 @@ def check_if_data_available_for(start_date: datetime.date):
 
 def map_table_data(table: list, Table_Map: list):
     table_data = []
+    headers = [header.text.strip() for header in table[0].find_all('th')]
     for row in table[1:]:  # Skip the first row as it contains the headers
         cols = row.find_all('td')
         cols = [ele.text.strip() for ele in cols]
-        row_data = dict(zip(Table_Map, cols))
+        row_data = {}
+        for i, col in enumerate(cols):
+            if headers[i] in Table_Map:
+                row_data[Table_Map[headers[i]]] = col
         table_data.append(row_data)
-        #print(table_data)
     
     return table_data
 
